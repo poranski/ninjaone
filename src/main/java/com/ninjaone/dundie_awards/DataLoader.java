@@ -48,6 +48,7 @@ public class DataLoader implements CommandLineRunner {
         int totalAwards = employeeRepository.findAll().stream()
                 .mapToInt(employee -> Objects.requireNonNullElse(employee.getDundieAwards(), 0))
                 .sum();
+
         this.awardsCache.setTotalAwards(totalAwards);
     }
 }

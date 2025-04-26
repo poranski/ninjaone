@@ -1,12 +1,11 @@
 package com.ninjaone.dundie_awards.controller;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.ninjaone.dundie_awards.dto.EmployeeDTO;
 import com.ninjaone.dundie_awards.exception.EmployeeIncompleteException;
 import com.ninjaone.dundie_awards.exception.EmployeeNotFoundException;
-import com.ninjaone.dundie_awards.model.Employee;
 import com.ninjaone.dundie_awards.service.EmployeeService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.slf4j.Logger;
@@ -38,16 +37,16 @@ public class EmployeeController {
     @ResponseBody
     @GetMapping("/employees")
     @Operation(summary = "Gets all employees")
-    public List<Employee> getAllEmployees() {
+    public List<EmployeeDTO> getAllEmployees() {
         return employeeService.getAllEmployees();
     }
 
     @ResponseBody
     @PostMapping("/employees")
     @Operation(summary = "Creates an employee")
-    public ResponseEntity<Employee> createEmployee(@RequestBody Employee employee) {
+    public ResponseEntity<EmployeeDTO> createEmployee(@RequestBody EmployeeDTO employee) {
         LOGGER.info("Creating an employee [Employee: {}]", employee);
-        Employee newEmployee;
+        EmployeeDTO newEmployee;
 
         try {
             newEmployee = employeeService.createEmployee(employee);
@@ -62,11 +61,11 @@ public class EmployeeController {
     @ResponseBody
     @GetMapping("/employees/{id}")
     @Operation(summary = "Gets an employee by ID")
-    public ResponseEntity<Employee> getEmployeeById(@PathVariable Long id) {
+    public ResponseEntity<EmployeeDTO> getEmployeeById(@PathVariable Long id) {
         LOGGER.info("Getting an employee [Id: {}]", id);
 
         try {
-            Employee employee = employeeService.getEmployeeById(id);
+            EmployeeDTO employee = employeeService.getEmployeeById(id);
             return ResponseEntity.ok(employee);
 
         } catch (EmployeeNotFoundException e) {
@@ -76,12 +75,16 @@ public class EmployeeController {
 
     @PutMapping("/employees/{id}")
     @Operation(summary = "Returns an employee by id")
-    public ResponseEntity<Employee> updateEmployee(@PathVariable Long id, @RequestBody Employee employeeDetails) {
+    public ResponseEntity<EmployeeDTO> updateEmployee(@PathVariable Long id, @RequestBody EmployeeDTO employeeDetails) {
         LOGGER.info("Updating an employee [Id: {}]", id);
 
         try {
-            Employee updatedEmployee = employeeService.updateEmployee(id, employeeDetails);
+            EmployeeDTO updatedEmployee = employeeService.updateEmployee(id, employeeDetails);
             return ResponseEntity.ok(updatedEmployee);
+
+        } catch (EmployeeIncompleteException e) {
+            LOGGER.error("Incomplete Data for employee [Employee: {}]", employeeDetails);
+            return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
 
         } catch (EmployeeNotFoundException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -96,10 +99,7 @@ public class EmployeeController {
 
         try {
             employeeService.deleteEmployee(id);
-
-            Map<String, Boolean> response = new HashMap<>();
-            response.put("deleted", Boolean.TRUE);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(Map.of("DELETED",Boolean.TRUE));
 
         } catch (EmployeeNotFoundException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

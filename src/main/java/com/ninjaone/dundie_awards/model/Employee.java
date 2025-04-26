@@ -1,8 +1,12 @@
 package com.ninjaone.dundie_awards.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "employees")
 public class Employee {
 
@@ -31,45 +35,5 @@ public class Employee {
         this.firstName = firstName;
         this.lastName = lastName;
         this.organization = organization;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public Organization getOrganization() {
-        return organization;
-    }
-
-    public void setOrganization(Organization organization) {
-        this.organization = organization;
-    }
-
-    public void setDundieAwards(int dundieAwards){
-        this.dundieAwards = dundieAwards;
-    }
-
-    public Integer getDundieAwards(){
-        return dundieAwards;
     }
 }
