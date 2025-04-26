@@ -22,20 +22,22 @@ public class EmployeeService {
     public static final String REQUESTED_EMPLOYEE_DOES_NOT_EXIST_ID = "Requested employee does not exist `[Id: {}]";
 
     /*
-    private ActivityRepository activityRepository;
     private MessageBroker messageBroker;
     */
     private final AwardsCache awardsCache;
+    private final ActivityService activityService;
     private final EntityToDTOConvertor entityToDTOConvertor;
     private final EmployeeRepository employeeRepository;
     private final OrganizationRepository organizationRepository;
 
     public EmployeeService(EmployeeRepository employeeRepository, OrganizationRepository organizationRepository,
-                           AwardsCache awardsCache, EntityToDTOConvertor entityToDTOConvertor) {
+                           AwardsCache awardsCache, EntityToDTOConvertor entityToDTOConvertor,
+                           ActivityService activityService) {
         this.employeeRepository = employeeRepository;
         this.organizationRepository = organizationRepository;
         this.entityToDTOConvertor = entityToDTOConvertor;
         this.awardsCache = awardsCache;
+        this.activityService = activityService;
     }
 
     /**
@@ -81,7 +83,10 @@ public class EmployeeService {
         }
 
         Employee employee = entityToDTOConvertor.getEmployee(employeeDTO);
-        return entityToDTOConvertor.getEmployeeDTO(employeeRepository.save(employee));
+        EmployeeDTO dto = entityToDTOConvertor.getEmployeeDTO(employeeRepository.save(employee));
+        activityService.saveActivity("Employee created: " + employee.getFirstName() + " " + employee.getLastName());
+
+        return dto;
     }
 
     /**
@@ -100,6 +105,7 @@ public class EmployeeService {
 
         Employee employee = optionalEmployee.get();
         employeeRepository.delete(employee);
+        activityService.saveActivity("Employee deleted: " + employee.getFirstName() + " " + employee.getLastName());
     }
 
     /**
@@ -129,7 +135,9 @@ public class EmployeeService {
         employee.setFirstName(employeeDetails.getFirstName());
         employee.setLastName(employeeDetails.getLastName());
 
-        return entityToDTOConvertor.getEmployeeDTO(employeeRepository.save(employee));
+        EmployeeDTO dto = entityToDTOConvertor.getEmployeeDTO(employeeRepository.save(employee));
+        activityService.saveActivity("Employee updated: " + employee.getFirstName() + " " + employee.getLastName());
+        return dto;
     }
 
     /**
@@ -157,6 +165,7 @@ public class EmployeeService {
         employee = employeeRepository.save(employee);
 
        awardsCache.addOneAward();
+        activityService.saveActivity("Employee got Award!: " + employee.getFirstName() + " " + employee.getLastName());
 
        //messageBroker.sendMessage(new ActivityEventDTO(LocalDateTime.now(), "Dundie Award given to: "+emp.getFirstName()));
        return entityToDTOConvertor.getEmployeeDTO(employee);

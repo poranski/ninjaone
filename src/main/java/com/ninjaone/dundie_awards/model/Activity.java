@@ -1,8 +1,13 @@
 package com.ninjaone.dundie_awards.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "activities")
 public class Activity {
@@ -17,22 +22,15 @@ public class Activity {
     @Column(name = "event")
     private String event;
 
-    public Activity() {
+    public Activity() { }
 
-    }
-
-    public Activity(LocalDateTime localDateTime, String event) {
-        super();
-        this.occuredAt = localDateTime;
+    public Activity(String event) {
+        this.occuredAt = LocalDateTime.now();
         this.event = event;
     }
 
-    public LocalDateTime getOccuredAt() {
-        return occuredAt;
+    public Activity(LocalDateTime localDateTime, String event) {
+        this.occuredAt = localDateTime;
+        this.event = event;
     }
-
-    public String getEvent() {
-        return event;
-    }
-
 }

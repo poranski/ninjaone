@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping()
 public class EmployeeController {
     private static final Logger LOGGER = LoggerFactory.getLogger(EmployeeController.class);
-    private EmployeeService employeeService;
+    private final EmployeeService employeeService;
 
 
 
@@ -74,7 +74,7 @@ public class EmployeeController {
     }
 
     @PutMapping("/employees/{id}")
-    @Operation(summary = "Returns an employee by id")
+    @Operation(summary = "Updates an employee by id")
     public ResponseEntity<EmployeeDTO> updateEmployee(@PathVariable Long id, @RequestBody EmployeeDTO employeeDetails) {
         LOGGER.info("Updating an employee [Id: {}]", id);
 
@@ -100,6 +100,21 @@ public class EmployeeController {
         try {
             employeeService.deleteEmployee(id);
             return ResponseEntity.ok(Map.of("DELETED",Boolean.TRUE));
+
+        } catch (EmployeeNotFoundException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @ResponseBody
+    @GetMapping("/employees/award/{id}")
+    @Operation(summary = "Gives an award to employee by id")
+    public ResponseEntity<String> awardEmployee(@PathVariable Long id) {
+        LOGGER.info("Awarding an employee [Id: {}]", id);
+
+        try {
+            employeeService.giveAward(id);
+            return ResponseEntity.ok("success");
 
         } catch (EmployeeNotFoundException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
