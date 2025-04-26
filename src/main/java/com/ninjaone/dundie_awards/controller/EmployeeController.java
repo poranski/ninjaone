@@ -1,19 +1,16 @@
 package com.ninjaone.dundie_awards.controller;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
-import com.ninjaone.dundie_awards.AwardsCache;
-import com.ninjaone.dundie_awards.MessageBroker;
-import com.ninjaone.dundie_awards.model.Activity;
+import com.ninjaone.dundie_awards.exception.EmployeeIncompleteException;
+import com.ninjaone.dundie_awards.exception.EmployeeNotFoundException;
 import com.ninjaone.dundie_awards.model.Employee;
-import com.ninjaone.dundie_awards.repository.ActivityRepository;
-import com.ninjaone.dundie_awards.repository.EmployeeRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.ninjaone.dundie_awards.service.EmployeeService;
+import io.swagger.v3.oas.annotations.Operation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -29,75 +26,83 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Controller
 @RequestMapping()
 public class EmployeeController {
+    private static final Logger LOGGER = LoggerFactory.getLogger(EmployeeController.class);
+    private EmployeeService employeeService;
 
-    @Autowired
-    private EmployeeRepository employeeRepository;
 
-    @Autowired
-    private ActivityRepository activityRepository;
 
-    @Autowired
-    private MessageBroker messageBroker;
+    public EmployeeController(EmployeeService employeeService) {
+        this.employeeService = employeeService;
+    }
 
-    @Autowired
-    private AwardsCache awardsCache;
-
-    // get all employees
+    @ResponseBody
     @GetMapping("/employees")
-    @ResponseBody
+    @Operation(summary = "Gets all employees")
     public List<Employee> getAllEmployees() {
-        return employeeRepository.findAll();
+        return employeeService.getAllEmployees();
     }
 
-    // create employee rest api
+    @ResponseBody
     @PostMapping("/employees")
-    @ResponseBody
-    public Employee createEmployee(@RequestBody Employee employee) {
-        return employeeRepository.save(employee);
+    @Operation(summary = "Creates an employee")
+    public ResponseEntity<Employee> createEmployee(@RequestBody Employee employee) {
+        LOGGER.info("Creating an employee [Employee: {}]", employee);
+        Employee newEmployee;
+
+        try {
+            newEmployee = employeeService.createEmployee(employee);
+
+        } catch (EmployeeIncompleteException e) {
+            LOGGER.error("Incomplete Data for employee [Employee: {}]", employee);
+            return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+        }
+        return ResponseEntity.ok(newEmployee);
     }
 
-    // get employee by id rest api
+    @ResponseBody
     @GetMapping("/employees/{id}")
-    @ResponseBody
+    @Operation(summary = "Gets an employee by ID")
     public ResponseEntity<Employee> getEmployeeById(@PathVariable Long id) {
-        Optional<Employee> optionalEmployee = employeeRepository.findById(id);
-        if (optionalEmployee.isPresent()) {
-            return ResponseEntity.ok(optionalEmployee.get());
-        } else {
+        LOGGER.info("Getting an employee [Id: {}]", id);
+
+        try {
+            Employee employee = employeeService.getEmployeeById(id);
+            return ResponseEntity.ok(employee);
+
+        } catch (EmployeeNotFoundException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
-    // update employee rest api
     @PutMapping("/employees/{id}")
-    @ResponseBody
+    @Operation(summary = "Returns an employee by id")
     public ResponseEntity<Employee> updateEmployee(@PathVariable Long id, @RequestBody Employee employeeDetails) {
-        Optional<Employee> optionalEmployee = employeeRepository.findById(id);
-        if (!optionalEmployee.isPresent()) {
+        LOGGER.info("Updating an employee [Id: {}]", id);
+
+        try {
+            Employee updatedEmployee = employeeService.updateEmployee(id, employeeDetails);
+            return ResponseEntity.ok(updatedEmployee);
+
+        } catch (EmployeeNotFoundException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-
-        Employee employee = optionalEmployee.get();
-        employee.setFirstName(employeeDetails.getFirstName());
-        employee.setLastName(employeeDetails.getLastName());
-
-        Employee updatedEmployee = employeeRepository.save(employee);
-        return ResponseEntity.ok(updatedEmployee);
     }
 
-    // delete employee rest api
-    @DeleteMapping("/employees/{id}")
     @ResponseBody
+    @DeleteMapping("/employees/{id}")
+    @Operation(summary = "Returns an employee by id")
     public ResponseEntity<Map<String, Boolean>> deleteEmployee(@PathVariable Long id) {
-        Optional<Employee> optionalEmployee = employeeRepository.findById(id);
-        if (!optionalEmployee.isPresent()) {
+        LOGGER.info("Deleting an employee [Id: {}]", id);
+
+        try {
+            employeeService.deleteEmployee(id);
+
+            Map<String, Boolean> response = new HashMap<>();
+            response.put("deleted", Boolean.TRUE);
+            return ResponseEntity.ok(response);
+
+        } catch (EmployeeNotFoundException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-
-        Employee employee = optionalEmployee.get();
-        employeeRepository.delete(employee);
-        Map<String, Boolean> response = new HashMap<>();
-        response.put("deleted", Boolean.TRUE);
-        return ResponseEntity.ok(response);
     }
 }
