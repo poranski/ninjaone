@@ -18,8 +18,8 @@ public class CacheConfig {
     @Bean
     public Caffeine<Object, Object> caffeineConfig() {
         return Caffeine.newBuilder()
-            .initialCapacity(100)
-            .maximumSize(10000)
+            .initialCapacity(20)
+            .maximumSize(1000)
             .expireAfterAccess(24, TimeUnit.HOURS)
             .weakKeys()
             .recordStats();

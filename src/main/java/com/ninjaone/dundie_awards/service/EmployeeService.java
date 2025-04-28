@@ -70,7 +70,7 @@ public class EmployeeService {
             throw new EmployeeNotFoundException(id);
         }
 
-        return entityToDTOConvertor.getEmployeeDTO(optionalEmployee.get());
+        return entityToDTOConvertor.map(optionalEmployee.get(), EmployeeDTO.class);
     }
 
     /**
@@ -87,8 +87,8 @@ public class EmployeeService {
             throw new EmployeeIncompleteException(employeeDTO);
         }
 
-        Employee employee = entityToDTOConvertor.getEmployee(employeeDTO);
-        EmployeeDTO dto = entityToDTOConvertor.getEmployeeDTO(employeeRepository.save(employee));
+        Employee employee = entityToDTOConvertor.map(employeeDTO, Employee.class);
+        EmployeeDTO dto = entityToDTOConvertor.map(employeeRepository.save(employee), EmployeeDTO.class);
         activityService.saveActivity("Employee created: " + employee.getFirstName() + " " + employee.getLastName());
 
         return dto;
@@ -142,7 +142,7 @@ public class EmployeeService {
         employee.setFirstName(employeeDetails.getFirstName());
         employee.setLastName(employeeDetails.getLastName());
 
-        EmployeeDTO dto = entityToDTOConvertor.getEmployeeDTO(employeeRepository.save(employee));
+        EmployeeDTO dto = entityToDTOConvertor.map(employeeRepository.save(employee), EmployeeDTO.class);
         activityService.saveActivity("Employee updated: " + employee.getFirstName() + " " + employee.getLastName());
         return dto;
     }
@@ -175,7 +175,7 @@ public class EmployeeService {
         activityService.saveActivity("Employee got Award!: " + employee.getFirstName() + " " + employee.getLastName());
         messageBroker.sendMessage("Employee got Award!: " + employee.getFirstName() + " " + employee.getLastName());
 
-       return entityToDTOConvertor.getEmployeeDTO(employee);
+       return entityToDTOConvertor.map(employee, EmployeeDTO.class);
     }
 
     private boolean verifyEmployeeIsComplete(EmployeeDTO employee) {

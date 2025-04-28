@@ -2,10 +2,8 @@ package com.ninjaone.dundie_awards.util;
 
 import com.ninjaone.dundie_awards.dto.ActivityDTO;
 import com.ninjaone.dundie_awards.dto.EmployeeDTO;
-import com.ninjaone.dundie_awards.dto.OrganizationDTO;
 import com.ninjaone.dundie_awards.model.Activity;
 import com.ninjaone.dundie_awards.model.Employee;
-import com.ninjaone.dundie_awards.model.Organization;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +19,7 @@ public class EntityToDTOConvertor {
         this.modelMapper = modelMapper;
     }
 
+
     public List<EmployeeDTO> getEmployeeDTOs(List<Employee> employees) {
         List<EmployeeDTO> dto = new LinkedList<>();
         employees.forEach(employee -> dto.add(modelMapper.map(employee, EmployeeDTO.class)));
@@ -33,21 +32,7 @@ public class EntityToDTOConvertor {
         return dto;
     }
 
-    public EmployeeDTO getEmployeeDTO(Employee employee) {
-        return modelMapper.map(employee, EmployeeDTO.class);
+    public <S, T> T map(S source, Class<T> targetClass) {
+        return modelMapper.map(source, targetClass);
     }
-
-    public OrganizationDTO geOrganizationDTO(Organization organization) {
-        return modelMapper.map(organization, OrganizationDTO.class);
-    }
-
-    public Employee getEmployee(EmployeeDTO employee) {
-        return modelMapper.map(employee, Employee.class);
-    }
-
-    public Organization geOrganization(OrganizationDTO organization) {
-        return modelMapper.map(organization, Organization.class);
-    }
-
-
 }

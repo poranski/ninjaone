@@ -1,4 +1,4 @@
-package com.ninjaone.dundie_awards.rabbitmq;
+package com.ninjaone.dundie_awards.config;
 
 import com.ninjaone.dundie_awards.messages.MessageBroker;
 import org.springframework.amqp.core.Queue;
@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
 
-    static final String QUEUE_NAME = "spring-boot";
+    public static final String QUEUE_NAME = "spring-boot";
 
     @Bean
     Queue queue() {

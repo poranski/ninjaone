@@ -28,7 +28,7 @@ class EntityToDTOConverterTest {
 
         Employee employee = new Employee("Peter", "Poranski", organizationPikashu);
 
-        EmployeeDTO dto = entityToDTOConvertor.getEmployeeDTO(employee);
+        EmployeeDTO dto = entityToDTOConvertor.map(employee, EmployeeDTO.class);
 		assertNotNull(dto, "DTO should not be null");
         assertTrue(dto instanceof EmployeeDTO, "DTO should be of type EmployeeDTO");
         assertEquals(employee.getFirstName(), dto.getFirstName(), "First name should be the same");
@@ -42,7 +42,7 @@ class EntityToDTOConverterTest {
         OrganizationDTO organizationDTO = new OrganizationDTO(1L, "Pikashu");
         EmployeeDTO employeeDTO = new EmployeeDTO("Peter", "Poranski", organizationDTO);
 
-        Employee employee = entityToDTOConvertor.getEmployee(employeeDTO);
+        Employee employee = entityToDTOConvertor.map(employeeDTO, Employee.class);
         assertNotNull(employee, "DTO should not be null");
         assertTrue(employee instanceof Employee, "employee should be of type Employee");
         assertEquals(employee.getFirstName(), employeeDTO.getFirstName(), "First name should be the same");
