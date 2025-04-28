@@ -1,6 +1,6 @@
 package com.ninjaone.dundie_awards.rabbitmq;
 
-import com.ninjaone.dundie_awards.MessageBroker;
+import com.ninjaone.dundie_awards.messages.MessageBroker;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;

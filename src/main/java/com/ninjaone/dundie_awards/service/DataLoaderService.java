@@ -1,6 +1,6 @@
 package com.ninjaone.dundie_awards.service;
 
-import com.ninjaone.dundie_awards.AwardsCache;
+import com.ninjaone.dundie_awards.cache.AwardsCache;
 import com.ninjaone.dundie_awards.model.Employee;
 import com.ninjaone.dundie_awards.model.Organization;
 import com.ninjaone.dundie_awards.repository.ActivityRepository;
@@ -44,6 +44,7 @@ public class DataLoaderService {
     }
 
     public void reseedDataBase() {
+        LOGGER.info("Truncating database tables");
         activityRepository.truncateAndResetId();
         organizationRepository.truncateAndResetId();
         employeeRepository.truncateAndResetId();
@@ -51,6 +52,7 @@ public class DataLoaderService {
     }
 
     public void populateDatabase() {
+        LOGGER.info("Reseeding database");
         if (employeeRepository.count() == 0) {
             Organization organizationPikashu = new Organization("Pikashu");
             organizationRepository.save(organizationPikashu);

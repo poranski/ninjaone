@@ -1,5 +1,6 @@
 package com.ninjaone.dundie_awards;
 
+import com.ninjaone.dundie_awards.cache.AwardsCache;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

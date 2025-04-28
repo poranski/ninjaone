@@ -1,4 +1,4 @@
-package com.ninjaone.dundie_awards;
+package com.ninjaone.dundie_awards.messages;
 
 import com.ninjaone.dundie_awards.model.Activity;
 import com.ninjaone.dundie_awards.rabbitmq.RabbitMQSender;

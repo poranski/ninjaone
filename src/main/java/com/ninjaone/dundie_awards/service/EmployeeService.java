@@ -1,7 +1,7 @@
 package com.ninjaone.dundie_awards.service;
 
-import com.ninjaone.dundie_awards.AwardsCache;
-import com.ninjaone.dundie_awards.MessageBroker;
+import com.ninjaone.dundie_awards.cache.AwardsCache;
+import com.ninjaone.dundie_awards.messages.MessageBroker;
 import com.ninjaone.dundie_awards.dto.EmployeeDTO;
 import com.ninjaone.dundie_awards.exception.EmployeeIncompleteException;
 import com.ninjaone.dundie_awards.exception.EmployeeNotFoundException;

@@ -1,4 +1,4 @@
-package com.ninjaone.dundie_awards;
+package com.ninjaone.dundie_awards.cache;
 
 import org.springframework.stereotype.Component;
 
