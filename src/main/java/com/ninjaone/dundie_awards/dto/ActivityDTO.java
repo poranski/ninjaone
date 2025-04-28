@@ -1,10 +1,15 @@
 package com.ninjaone.dundie_awards.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
 public class ActivityDTO {
 
-    private long id;
+    private Long id;
     private LocalDateTime occuredAt;
     private String event;
 

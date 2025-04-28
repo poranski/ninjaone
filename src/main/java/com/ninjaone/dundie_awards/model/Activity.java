@@ -14,7 +14,7 @@ public class Activity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(name = "occured_at")
     private LocalDateTime occuredAt;

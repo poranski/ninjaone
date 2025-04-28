@@ -1,4 +1,4 @@
-package com.ninjaone.dundie_awards.rabbitMQ;
+package com.ninjaone.dundie_awards.rabbitmq;
 
 
 import org.slf4j.Logger;

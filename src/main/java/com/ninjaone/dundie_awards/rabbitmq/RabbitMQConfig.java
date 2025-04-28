@@ -1,4 +1,4 @@
-package com.ninjaone.dundie_awards.rabbitMQ;
+package com.ninjaone.dundie_awards.rabbitmq;
 
 import com.ninjaone.dundie_awards.MessageBroker;
 import org.springframework.amqp.core.Queue;
@@ -12,11 +12,11 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
 
-    static final String queueName = "spring-boot";
+    static final String QUEUE_NAME = "spring-boot";
 
     @Bean
     Queue queue() {
-        return new Queue(queueName, false);
+        return new Queue(QUEUE_NAME, false);
     }
 
     @Bean
@@ -29,7 +29,7 @@ public class RabbitMQConfig {
                                              MessageListenerAdapter listenerAdapter) {
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
-        container.setQueueNames(queueName);
+        container.setQueueNames(QUEUE_NAME);
         container.setMessageListener(listenerAdapter);
         return container;
     }

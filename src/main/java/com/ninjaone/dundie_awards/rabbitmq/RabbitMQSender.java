@@ -1,4 +1,4 @@
-package com.ninjaone.dundie_awards.rabbitMQ;
+package com.ninjaone.dundie_awards.rabbitmq;
 
 
 import org.slf4j.Logger;
@@ -19,7 +19,7 @@ public class RabbitMQSender {
 
     public void send(String message) {
         LOGGER.info("Send message to RabbitMQ [Message: {}]", message);
-        rabbitTemplate.convertAndSend(RabbitMQConfig.queueName, message);
+        rabbitTemplate.convertAndSend(RabbitMQConfig.QUEUE_NAME, message);
     }
 }
 

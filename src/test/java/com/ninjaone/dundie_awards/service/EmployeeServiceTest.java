@@ -4,6 +4,8 @@ import com.ninjaone.dundie_awards.dto.EmployeeDTO;
 import com.ninjaone.dundie_awards.dto.OrganizationDTO;
 import com.ninjaone.dundie_awards.exception.EmployeeIncompleteException;
 import com.ninjaone.dundie_awards.exception.EmployeeNotFoundException;
+import jakarta.annotation.PostConstruct;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,6 +19,9 @@ class EmployeeServiceTest {
 
 	@Autowired
 	private EmployeeService employeeService;
+
+    @Autowired
+    private DataLoaderService dataLoaderService;
 
 	@Test
 	void testGetAllEmployees() {
@@ -109,6 +114,11 @@ class EmployeeServiceTest {
         assertThrows(EmployeeNotFoundException.class, () -> {
             employeeService.getEmployeeById(newEmployee.getId());
         });
+    }
+
+    @PostConstruct
+    public void seedDatabase() {
+        dataLoaderService.populateDatabase();
     }
 
     private static EmployeeDTO getTestEmployee() {

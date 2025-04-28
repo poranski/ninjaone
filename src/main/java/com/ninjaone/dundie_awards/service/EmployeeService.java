@@ -1,6 +1,7 @@
 package com.ninjaone.dundie_awards.service;
 
 import com.ninjaone.dundie_awards.AwardsCache;
+import com.ninjaone.dundie_awards.MessageBroker;
 import com.ninjaone.dundie_awards.dto.EmployeeDTO;
 import com.ninjaone.dundie_awards.exception.EmployeeIncompleteException;
 import com.ninjaone.dundie_awards.exception.EmployeeNotFoundException;
@@ -11,6 +12,8 @@ import com.ninjaone.dundie_awards.repository.OrganizationRepository;
 import com.ninjaone.dundie_awards.util.EntityToDTOConvertor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,9 +24,7 @@ public class EmployeeService {
     private static final Logger LOGGER = LoggerFactory.getLogger(EmployeeService.class);
     public static final String REQUESTED_EMPLOYEE_DOES_NOT_EXIST_ID = "Requested employee does not exist `[Id: {}]";
 
-    /*
-    private MessageBroker messageBroker;
-    */
+    private final MessageBroker messageBroker;
     private final AwardsCache awardsCache;
     private final ActivityService activityService;
     private final EntityToDTOConvertor entityToDTOConvertor;
@@ -32,12 +33,13 @@ public class EmployeeService {
 
     public EmployeeService(EmployeeRepository employeeRepository, OrganizationRepository organizationRepository,
                            AwardsCache awardsCache, EntityToDTOConvertor entityToDTOConvertor,
-                           ActivityService activityService) {
+                           ActivityService activityService, MessageBroker messageBroker) {
         this.employeeRepository = employeeRepository;
         this.organizationRepository = organizationRepository;
         this.entityToDTOConvertor = entityToDTOConvertor;
         this.awardsCache = awardsCache;
         this.activityService = activityService;
+        this.messageBroker = messageBroker;
     }
 
     /**
@@ -45,6 +47,7 @@ public class EmployeeService {
      *
      * @return EmployeeDTO
      */
+    @Cacheable("employees")
     public List<EmployeeDTO> getAllEmployees() {
         LOGGER.info("Getting all employees");
         return entityToDTOConvertor.getEmployeeDTOs(employeeRepository.findAll());
@@ -57,6 +60,7 @@ public class EmployeeService {
      * @return EmployeeDTO
      * @throws EmployeeNotFoundException
      */
+    @Cacheable(cacheNames = "employee", key= "#id")
     public EmployeeDTO getEmployeeById(Long id) throws EmployeeNotFoundException {
         LOGGER.info("Getting employee [Id: {}]", id);
         Optional<Employee> optionalEmployee = employeeRepository.findById(id);
@@ -75,6 +79,7 @@ public class EmployeeService {
      * @param employeeDTO
      * @return EmployeeDTO
      */
+    @CacheEvict(value = "employees", allEntries = true)
     public EmployeeDTO createEmployee(EmployeeDTO employeeDTO) throws EmployeeIncompleteException {
         LOGGER.debug("Creating employee. [Employee: {}]", employeeDTO);
 
@@ -95,6 +100,7 @@ public class EmployeeService {
      * @param id
      * @throws EmployeeNotFoundException
      */
+    @CacheEvict(value = "employees", allEntries = true)
     public void deleteEmployee(Long id) throws EmployeeNotFoundException {
         LOGGER.info("Deleting employee [Id: {}]", id);
         Optional<Employee> optionalEmployee = employeeRepository.findById(id);
@@ -115,6 +121,7 @@ public class EmployeeService {
      * @return
      * @throws EmployeeNotFoundException
      */
+    @CacheEvict(value = "employees", allEntries = true)
     public EmployeeDTO updateEmployee(Long id, EmployeeDTO employeeDetails) throws EmployeeNotFoundException,
                     EmployeeIncompleteException {
 
@@ -166,8 +173,8 @@ public class EmployeeService {
 
        awardsCache.addOneAward();
         activityService.saveActivity("Employee got Award!: " + employee.getFirstName() + " " + employee.getLastName());
+        messageBroker.sendMessage("Employee got Award!: " + employee.getFirstName() + " " + employee.getLastName());
 
-       //messageBroker.sendMessage(new ActivityEventDTO(LocalDateTime.now(), "Dundie Award given to: "+emp.getFirstName()));
        return entityToDTOConvertor.getEmployeeDTO(employee);
     }
 

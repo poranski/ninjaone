@@ -1,7 +1,9 @@
 package com.ninjaone.dundie_awards.util;
 
+import com.ninjaone.dundie_awards.dto.ActivityDTO;
 import com.ninjaone.dundie_awards.dto.EmployeeDTO;
 import com.ninjaone.dundie_awards.dto.OrganizationDTO;
+import com.ninjaone.dundie_awards.model.Activity;
 import com.ninjaone.dundie_awards.model.Employee;
 import com.ninjaone.dundie_awards.model.Organization;
 import org.modelmapper.ModelMapper;
@@ -22,6 +24,12 @@ public class EntityToDTOConvertor {
     public List<EmployeeDTO> getEmployeeDTOs(List<Employee> employees) {
         List<EmployeeDTO> dto = new LinkedList<>();
         employees.forEach(employee -> dto.add(modelMapper.map(employee, EmployeeDTO.class)));
+        return dto;
+    }
+
+    public List<ActivityDTO> getActivityDTOs(List<Activity> activities) {
+        List<ActivityDTO> dto = new LinkedList<>();
+        activities.forEach(activity -> dto.add(modelMapper.map(activity, ActivityDTO.class)));
         return dto;
     }
 

@@ -2,9 +2,8 @@ package com.ninjaone.dundie_awards.controller;
 
 import com.ninjaone.dundie_awards.AwardsCache;
 import com.ninjaone.dundie_awards.MessageBroker;
-import com.ninjaone.dundie_awards.repository.ActivityRepository;
-import com.ninjaone.dundie_awards.repository.EmployeeRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.ninjaone.dundie_awards.service.ActivityService;
+import com.ninjaone.dundie_awards.service.EmployeeService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,22 +14,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/")
 public class IndexController {
 
-    @Autowired
-    private EmployeeRepository employeeRepository;
+    private final EmployeeService employeeService;
+    private final ActivityService activityService;
+    private final MessageBroker messageBroker;
+    private final AwardsCache awardsCache;
 
-    @Autowired
-    private ActivityRepository activityRepository;
-
-    @Autowired
-    private MessageBroker messageBroker;
-
-    @Autowired
-    private AwardsCache awardsCache;
+    public IndexController(EmployeeService employeeService, ActivityService activityService,
+                           MessageBroker messageBroker, AwardsCache awardsCache) {
+        this.employeeService = employeeService;
+        this.activityService = activityService;
+        this.messageBroker = messageBroker;
+        this.awardsCache = awardsCache;
+    }
 
     @GetMapping()
     public String getIndex(Model model) {
-        model.addAttribute("employees", employeeRepository.findAll());
-        model.addAttribute("activities", activityRepository.findAll());
+        model.addAttribute("employees", employeeService.getAllEmployees());
+        model.addAttribute("activities", activityService.getAllActivities());
         model.addAttribute("queueMessages", messageBroker.getMessages());
         model.addAttribute("totalDundieAwards", awardsCache.getTotalAwards());
         return "index";
