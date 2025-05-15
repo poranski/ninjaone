@@ -1,5 +1,7 @@
 package com.ninjaone.dundie_awards.service;
 
+import com.ninjaone.dundie_awards.cache.AwardsCache;
+import com.ninjaone.dundie_awards.dto.ActivityDTO;
 import com.ninjaone.dundie_awards.dto.EmployeeDTO;
 import com.ninjaone.dundie_awards.dto.OrganizationDTO;
 import com.ninjaone.dundie_awards.exception.EmployeeIncompleteException;
@@ -21,8 +23,12 @@ class EmployeeServiceTest {
 
     @Autowired
     private DataLoaderService dataLoaderService;
+    @Autowired
+    private AwardsCache awardsCache;
+    @Autowired
+    private ActivityService activityService;
 
-	@Test
+    @Test
 	void testGetAllEmployees() {
 		List<EmployeeDTO> employees = employeeService.getAllEmployees();
 		assertNotNull(employees);
@@ -113,6 +119,40 @@ class EmployeeServiceTest {
         assertThrows(EmployeeNotFoundException.class, () -> {
             employeeService.getEmployeeById(newEmployee.getId());
         });
+    }
+
+    @Test
+    void deleteEmployeeNotFound() {
+        Long employeeId = 100L;
+        assertThrows(EmployeeNotFoundException.class, () -> employeeService.deleteEmployee(employeeId));
+    }
+
+    @Test
+    void giveAwardsToOrganization() throws InterruptedException {
+        List<EmployeeDTO> employeeDTOS = employeeService.getEmployeesInOrganization(1L);
+        List<ActivityDTO> activitiesDTOs = activityService.getAllActivities();
+        Integer awards = awardsCache.getTotalAwards();
+
+        employeeService.addAwardsForOrganization(1L);
+        List<EmployeeDTO> updatedEmployeeDTOS = employeeService.getEmployeesInOrganization(1L);
+
+        assertEquals(awardsCache.getTotalAwards(), awards + updatedEmployeeDTOS.size(),
+            "Total awards should be equal to the number of employees in the organization");
+
+        for (EmployeeDTO employee : employeeDTOS)   {
+            for(EmployeeDTO updatedEmployee : updatedEmployeeDTOS) {
+                if (employee.getId().equals(updatedEmployee.getId())) {
+                    assertEquals(employee.getDundieAwards() + 1, updatedEmployee.getDundieAwards(),
+                        "Dundie awards should be incremented by 1");
+                }
+            }
+        }
+
+        Thread.sleep(10000);
+        List<ActivityDTO> updatedActivitiesDTOs = activityService.getAllActivities();
+        assertEquals(activitiesDTOs.size() + employeeDTOS.size(), updatedActivitiesDTOs.size(),
+            "Activities should be equal to the number of employees in the organization");
+
     }
 
     @PostConstruct

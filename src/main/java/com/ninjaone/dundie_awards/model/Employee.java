@@ -35,5 +35,6 @@ public class Employee {
         this.firstName = firstName;
         this.lastName = lastName;
         this.organization = organization;
+        this.dundieAwards = 0;
     }
 }

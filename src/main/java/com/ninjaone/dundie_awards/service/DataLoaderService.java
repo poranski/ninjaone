@@ -22,14 +22,12 @@ public class DataLoaderService {
     private final EmployeeRepository employeeRepository;
     private final OrganizationRepository organizationRepository;
     private final AwardsCache awardsCache;
-    private final ActivityRepository activityRepository;
 
     public DataLoaderService(EmployeeRepository employeeRepository, OrganizationRepository organizationRepository,
-                             AwardsCache awardsCache, ActivityRepository activityRepository) {
+                             AwardsCache awardsCache) {
         this.awardsCache = awardsCache;
         this.employeeRepository = employeeRepository;
         this.organizationRepository = organizationRepository;
-        this.activityRepository = activityRepository;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -41,14 +39,6 @@ public class DataLoaderService {
 
         this.awardsCache.setTotalAwards(totalAwards);
         LOGGER.info("Awards cache set to {}", totalAwards);
-    }
-
-    public void reseedDataBase() {
-        LOGGER.info("Truncating database tables");
-        activityRepository.truncateAndResetId();
-        organizationRepository.truncateAndResetId();
-        employeeRepository.truncateAndResetId();
-        populateDatabase();
     }
 
     public void populateDatabase() {

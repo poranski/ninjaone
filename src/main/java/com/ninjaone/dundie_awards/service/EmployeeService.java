@@ -5,6 +5,7 @@ import com.ninjaone.dundie_awards.messages.MessageBroker;
 import com.ninjaone.dundie_awards.dto.EmployeeDTO;
 import com.ninjaone.dundie_awards.exception.EmployeeIncompleteException;
 import com.ninjaone.dundie_awards.exception.EmployeeNotFoundException;
+import com.ninjaone.dundie_awards.model.Activity;
 import com.ninjaone.dundie_awards.model.Employee;
 import com.ninjaone.dundie_awards.model.Organization;
 import com.ninjaone.dundie_awards.repository.EmployeeRepository;
@@ -15,7 +16,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,40 +29,27 @@ public class EmployeeService {
 
     private final MessageBroker messageBroker;
     private final AwardsCache awardsCache;
-    private final ActivityService activityService;
     private final EntityToDTOConvertor entityToDTOConvertor;
     private final EmployeeRepository employeeRepository;
     private final OrganizationRepository organizationRepository;
 
     public EmployeeService(EmployeeRepository employeeRepository, OrganizationRepository organizationRepository,
                            AwardsCache awardsCache, EntityToDTOConvertor entityToDTOConvertor,
-                           ActivityService activityService, MessageBroker messageBroker) {
+                           MessageBroker messageBroker) {
         this.employeeRepository = employeeRepository;
         this.organizationRepository = organizationRepository;
         this.entityToDTOConvertor = entityToDTOConvertor;
         this.awardsCache = awardsCache;
-        this.activityService = activityService;
         this.messageBroker = messageBroker;
     }
 
-    /**
-     * Get all employees
-     *
-     * @return EmployeeDTO
-     */
     @Cacheable("employees")
     public List<EmployeeDTO> getAllEmployees() {
         LOGGER.info("Getting all employees");
         return entityToDTOConvertor.getEmployeeDTOs(employeeRepository.findAll());
+
     }
 
-    /**
-     * Get employee by id
-     *
-     * @param id
-     * @return EmployeeDTO
-     * @throws EmployeeNotFoundException
-     */
     @Cacheable(cacheNames = "employee", key= "#id")
     public EmployeeDTO getEmployeeById(Long id) throws EmployeeNotFoundException {
         LOGGER.info("Getting employee [Id: {}]", id);
@@ -73,12 +63,6 @@ public class EmployeeService {
         return entityToDTOConvertor.map(optionalEmployee.get(), EmployeeDTO.class);
     }
 
-    /**
-     * Create employee
-     *
-     * @param employeeDTO
-     * @return EmployeeDTO
-     */
     @CacheEvict(value = "employees", allEntries = true)
     public EmployeeDTO createEmployee(EmployeeDTO employeeDTO) throws EmployeeIncompleteException {
         LOGGER.debug("Creating employee. [Employee: {}]", employeeDTO);
@@ -88,18 +72,9 @@ public class EmployeeService {
         }
 
         Employee employee = entityToDTOConvertor.map(employeeDTO, Employee.class);
-        EmployeeDTO dto = entityToDTOConvertor.map(employeeRepository.save(employee), EmployeeDTO.class);
-        activityService.saveActivity("Employee created: " + employee.getFirstName() + " " + employee.getLastName());
-
-        return dto;
+        return entityToDTOConvertor.map(employeeRepository.save(employee), EmployeeDTO.class);
     }
 
-    /**
-     * Delete employee by id
-     *
-     * @param id
-     * @throws EmployeeNotFoundException
-     */
     @CacheEvict(value = "employees", allEntries = true)
     public void deleteEmployee(Long id) throws EmployeeNotFoundException {
         LOGGER.info("Deleting employee [Id: {}]", id);
@@ -111,16 +86,30 @@ public class EmployeeService {
 
         Employee employee = optionalEmployee.get();
         employeeRepository.delete(employee);
-        activityService.saveActivity("Employee deleted: " + employee.getFirstName() + " " + employee.getLastName());
     }
 
-    /**
-     * Update employee
-     *
-     * @param employeeDetails
-     * @return
-     * @throws EmployeeNotFoundException
-     */
+    public List<EmployeeDTO> getEmployeesInOrganization(Long organizationId) {
+        LOGGER.info("Getting employees in organization [Id: {}]", organizationId);
+        List<Employee> employees = employeeRepository.findByOrganizationId(organizationId);
+
+        return entityToDTOConvertor.getEmployeeDTOs(employees);
+    }
+
+    @Transactional
+    public void addAwardsForOrganization(Long id) {
+        LOGGER.info("Adding award for everyone in org [Id: {}]", id);
+
+        List<Employee> employees = employeeRepository.findByOrganizationId(id);
+
+        for (Employee employee : employees) {
+            employee.setDundieAwards(employee.getDundieAwards() + 1);
+            awardsCache.addOneAward();
+            employeeRepository.save(employee);
+        }
+
+        messageBroker.sendMultipleTransactionalMessages(employees);
+    }
+
     @CacheEvict(value = "employees", allEntries = true)
     public EmployeeDTO updateEmployee(Long id, EmployeeDTO employeeDetails) throws EmployeeNotFoundException,
                     EmployeeIncompleteException {
@@ -142,17 +131,9 @@ public class EmployeeService {
         employee.setFirstName(employeeDetails.getFirstName());
         employee.setLastName(employeeDetails.getLastName());
 
-        EmployeeDTO dto = entityToDTOConvertor.map(employeeRepository.save(employee), EmployeeDTO.class);
-        activityService.saveActivity("Employee updated: " + employee.getFirstName() + " " + employee.getLastName());
-        return dto;
+        return entityToDTOConvertor.map(employeeRepository.save(employee), EmployeeDTO.class);
     }
 
-    /**
-     *
-     * @param id
-     * @return
-     * @throws EmployeeNotFoundException
-     */
     public EmployeeDTO giveAward(Long id) throws EmployeeNotFoundException {
         Optional<Employee> optionalEmployee = employeeRepository.findById(id);
 
@@ -171,9 +152,11 @@ public class EmployeeService {
 
         employee = employeeRepository.save(employee);
 
-       awardsCache.addOneAward();
-        activityService.saveActivity("Employee got Award!: " + employee.getFirstName() + " " + employee.getLastName());
-        messageBroker.sendMessage("Employee got Award!: " + employee.getFirstName() + " " + employee.getLastName());
+        Activity activity = new Activity(new Date(), "Employee got Award!: " + employee.getFirstName() +
+            " " + employee.getLastName());
+
+        awardsCache.addOneAward();
+        messageBroker.sendMessage(activity);
 
        return entityToDTOConvertor.map(employee, EmployeeDTO.class);
     }

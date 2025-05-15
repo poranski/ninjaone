@@ -32,8 +32,8 @@ public class ActivityService {
     }
 
     @CacheEvict(value = "activities", allEntries = true)
-    public void saveActivity(String event) {
-        LOGGER.info("Saving activity [Event: {}}", event);
-        activityRepository.save(new Activity(event));
+    public void saveActivity(Activity activity) {
+        LOGGER.info("Saving activity [activity: {}}", activity);
+        activityRepository.save(activity);
     }
 }

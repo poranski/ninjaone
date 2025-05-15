@@ -4,33 +4,46 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.io.Serializable;
+import java.util.Date;
 
 @Getter
 @Setter
 @Entity
 @Table(name = "activities")
-public class Activity {
+public class Activity implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "occured_at")
-    private LocalDateTime occuredAt;
+    private Date occuredAt;
 
     @Column(name = "event")
     private String event;
 
+    private boolean completed;
+    private Integer batchNumber;
+    private Long employeeId;
+
     public Activity() { }
 
     public Activity(String event) {
-        this.occuredAt = LocalDateTime.now();
+        this.occuredAt = new Date();
         this.event = event;
     }
 
-    public Activity(LocalDateTime localDateTime, String event) {
+    public Activity(Date localDateTime, String event) {
         this.occuredAt = localDateTime;
         this.event = event;
+    }
+
+    public Activity(Date localDateTime, String event, Integer batchNumber, Long employeeId) {
+        this.occuredAt = localDateTime;
+        this.event = event;
+        this.completed = false;
+        this.batchNumber = batchNumber;
+        this.employeeId = employeeId;
     }
 }
