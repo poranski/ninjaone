@@ -21,7 +21,7 @@ public class AwardsCache {
         this.totalAwards.incrementAndGet();
     }
 
-    public void clearCache() {
-        this.totalAwards.set(0);
+    public void removeOneAward() {
+        this.totalAwards.decrementAndGet();
     }
 }

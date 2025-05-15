@@ -134,12 +134,13 @@ public class EmployeeService {
         return entityToDTOConvertor.map(employeeRepository.save(employee), EmployeeDTO.class);
     }
 
-    public EmployeeDTO giveAward(Long id) throws EmployeeNotFoundException {
-        Optional<Employee> optionalEmployee = employeeRepository.findById(id);
+    @CacheEvict(value = "employees", allEntries = true)
+    public EmployeeDTO giveAward(Long employeeID) throws EmployeeNotFoundException {
+        Optional<Employee> optionalEmployee = employeeRepository.findById(employeeID);
 
         if(optionalEmployee.isEmpty()) {
-            LOGGER.info(REQUESTED_EMPLOYEE_DOES_NOT_EXIST_ID, id);
-            throw new EmployeeNotFoundException(id);
+            LOGGER.info(REQUESTED_EMPLOYEE_DOES_NOT_EXIST_ID, employeeID);
+            throw new EmployeeNotFoundException(employeeID);
         }
 
         Employee employee = optionalEmployee.get();
@@ -159,6 +160,25 @@ public class EmployeeService {
         messageBroker.sendMessage(activity);
 
        return entityToDTOConvertor.map(employee, EmployeeDTO.class);
+    }
+
+    @CacheEvict(value = "employees", allEntries = true)
+    public void removeAward(Long employeeID) throws EmployeeNotFoundException {
+        Optional<Employee> optionalEmployee = employeeRepository.findById(employeeID);
+
+        if(optionalEmployee.isEmpty()) {
+            LOGGER.info(REQUESTED_EMPLOYEE_DOES_NOT_EXIST_ID, employeeID);
+            throw new EmployeeNotFoundException(employeeID);
+        }
+
+        Employee employee = optionalEmployee.get();
+
+        if(employee.getDundieAwards() != null) {
+            employee.setDundieAwards(employee.getDundieAwards()-1);
+        }
+
+        employeeRepository.save(employee);
+        awardsCache.removeOneAward();
     }
 
     private boolean verifyEmployeeIsComplete(EmployeeDTO employee) {

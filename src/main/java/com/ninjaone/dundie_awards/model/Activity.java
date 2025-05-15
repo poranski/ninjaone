@@ -23,7 +23,6 @@ public class Activity implements Serializable {
     @Column(name = "event")
     private String event;
 
-    private boolean completed;
     private Integer batchNumber;
     private Long employeeId;
 
@@ -42,7 +41,6 @@ public class Activity implements Serializable {
     public Activity(Date localDateTime, String event, Integer batchNumber, Long employeeId) {
         this.occuredAt = localDateTime;
         this.event = event;
-        this.completed = false;
         this.batchNumber = batchNumber;
         this.employeeId = employeeId;
     }
