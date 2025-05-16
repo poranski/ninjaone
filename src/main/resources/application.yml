@@ -20,10 +20,22 @@ spring:
       spring.jpa.database-platform: org.hibernate.dialect.H2Dialect
       show-sql: true
       properties:
+          hibernate:
+            format_sql: true
+            use_sql_comments: true
+            dialect: org.hibernate.dialect.H2Dialect
+
+    logging:
+      level:
+        #org.hibernate.SQL: DEBUG
+        #org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+        org.hibernate: TRACE
+
+
       ## Hibernate Properties
       # The SQL dialect makes Hibernate generate better SQL for the chosen database
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+      #hibernate:
+      #  dialect: org.hibernate.dialect.PostgreSQLDialect
     # Hibernate ddl auto (create, create-drop, validate, update)
     hibernate:
       ddl-auto: update

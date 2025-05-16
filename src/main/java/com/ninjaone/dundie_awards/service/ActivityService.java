@@ -6,8 +6,6 @@ import com.ninjaone.dundie_awards.repository.ActivityRepository;
 import com.ninjaone.dundie_awards.util.EntityToDTOConvertor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,16 +22,17 @@ public class ActivityService {
         this.entityToDTOConvertor = entityToDTOConvertor;
     }
 
-    @Cacheable("activities")
     public List<ActivityDTO> getAllActivities() {
         LOGGER.info("Fetching all activities");
         List<Activity> activities = activityRepository.findAll();
         return entityToDTOConvertor.getActivityDTOs(activities);
     }
 
-    @CacheEvict(value = "activities", allEntries = true)
     public void saveActivity(Activity activity) {
         LOGGER.info("Saving activity [activity: {}}", activity);
+        if (activity.getOccurredAt() == null) {
+            activity.setOccurredAt(new java.util.Date());
+        }
         activityRepository.save(activity);
     }
 }

@@ -15,10 +15,12 @@ import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Component
 public class MessageBroker {
@@ -54,7 +56,10 @@ public class MessageBroker {
             String message = String.format("%s %s got an Award", employee.getFirstName(), employee.getLastName());
             Activity activity = new Activity(new Date(), message, currentBatchNumber, employee.getId());
             messagesQueue.add(activity);
-            sendMessage(activity);
+
+            //for testing: if(employee.getId() != 2) {
+                sendMessage(activity);
+            //}
         }
     }
 
@@ -65,62 +70,67 @@ public class MessageBroker {
 
     public void receiveMessage(Activity activity) {
         LOGGER.info("Received message from rabbitMQ [Message: {}]", activity);
+
+        markActivityCompleted(activity);
         activityService.saveActivity(activity);
-        messagesQueue.add(activity);
     }
 
     public Queue<Activity> getMessages(){
         return messagesQueue;
     }
 
-
-
     @Scheduled(cron = "0 * * * * *")
-    private void checkForIncompleteBatches() {
-        incompleteBatches.forEach((batchNumber, employeeCount) -> {
+    public void checkForIncompleteBatches() {
+        incompleteBatches.forEach((currentBatchNumber, employeeCount) -> {
 
-            if(isBatchComplete(batchNumber, employeeCount)) {
+            List<Activity> incompleteActivities = getActivitiesByBatchNumber(currentBatchNumber);
+
+            if(batchCompete(incompleteActivities)) {
                 LOGGER.info("All messages for batch {} have been processed", batchNumber);
-                incompleteBatches.remove(batchNumber);
-            }
+                incompleteBatches.remove(currentBatchNumber);
 
-            List<Activity> incompleteActivities = getActivitiesByBatchNumber(batchNumber);
-            Date date = getLatestTimestamp(incompleteActivities);
+            } else {
+                Date date = getLatestTimestamp(incompleteActivities);
 
-            if (isOlderThanWaitTime(date)) {
-                LOGGER.info("There are messages for batch {} have not been processed", batchNumber);
-                rollBack(incompleteActivities);
-                incompleteBatches.remove(batchNumber);
+                if (isOlderThanWaitTime(date)) {
+                    LOGGER.info("There are messages for batch {} have not been processed", currentBatchNumber);
+                    rollBack(incompleteActivities);
+                    incompleteBatches.remove(currentBatchNumber);
+                }
             }
         });
+    }
+
+    private boolean batchCompete(List<Activity> incompleteActivities) {
+        for (Activity activity : incompleteActivities) {
+            if (!activity.isCompleted()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void rollBack(List<Activity> activities) {
         for (Activity activity : activities) {
             LOGGER.info("Rolling back activity [Activity: {}]", activity);
-            employeeRepository.findById(activity.getEmployeeId());
+            Optional<Employee> employee = employeeRepository.findById(activity.getEmployeeId());
+
+            if (employee.isPresent()) {
+                Employee emp = employee.get();
+                emp.setDundieAwards(emp.getDundieAwards() - 1);
+                employeeRepository.save(emp);
+                LOGGER.info("Removed an award [Employee: {} {}]", emp.getFirstName(), emp.getLastName());
+            }
+
             messagesQueue.remove(activity);
             awardsCache.removeOneAward();
         }
     }
 
-    private boolean isBatchComplete(int batchNumber, int employeeCount) {
-        for (Activity activity : messagesQueue) {
-            if (activity.getBatchNumber() == batchNumber) {
-                employeeCount--;
-                if (employeeCount == 0) {
-                    LOGGER.info("Batch {} is complete", batchNumber);
-                    return true;
-                }
-           }
-        }
-
-        return false;
-    }
-
     private boolean isOlderThanWaitTime(Date date) {
         long now = System.currentTimeMillis();
         long threshold = now - WAIT_TIME_IN_MINUTES * 60 * 1000;
+        // for testing: long threshold = now - 10 * 1000;
         return date.getTime() < threshold;
     }
 
@@ -132,9 +142,17 @@ public class MessageBroker {
 
     private Date getLatestTimestamp(List<Activity> activity) {
         return activity.stream()
-            .map(Activity::getOccuredAt)
+            .map(Activity::getOccurredAt)
             .max(Date::compareTo)
             .orElse(null);
     }
 
+    private void markActivityCompleted(Activity activity) {
+        for(Activity existingActivity : messagesQueue) {
+            if(existingActivity.equals(activity)) {
+                existingActivity.setCompleted(true);
+                break;
+            }
+        }
+    }
 }

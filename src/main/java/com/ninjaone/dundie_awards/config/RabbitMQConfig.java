@@ -38,7 +38,6 @@ public class RabbitMQConfig {
         return container;
     }
 
-
     @Bean
     MessageListenerAdapter listenerAdapter(MessageBroker messageBroker, Jackson2JsonMessageConverter messageConverter) {
         MessageListenerAdapter adapter = new MessageListenerAdapter(messageBroker, "receiveMessage");

@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 public class ActivityDTO {
 
     private Long id;
-    private LocalDateTime occuredAt;
+    private LocalDateTime occurredAt;
     private String event;
 
     public ActivityDTO() {
@@ -19,16 +19,16 @@ public class ActivityDTO {
 
     public ActivityDTO(String event) {
         this.event = event;
-        this.occuredAt = LocalDateTime.now();
+        this.occurredAt = LocalDateTime.now();
     }
 
     public ActivityDTO(LocalDateTime localDateTime, String event) {
-        this.occuredAt = localDateTime;
+        this.occurredAt = localDateTime;
         this.event = event;
     }
 
     @Override
     public String toString() {
-        return "ActivityDTO{" + "id=" + id + ", occuredAt=" + occuredAt + ", event='" + event + '\'' + '}';
+        return "ActivityDTO{" + "id=" + id + ", occuredAt=" + occurredAt + ", event='" + event + '\'' + '}';
     }
 }

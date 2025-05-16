@@ -120,4 +120,13 @@ public class EmployeeController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
+    @ResponseBody
+    @GetMapping("/give-dundie-awards/{orgId}")
+    @Operation(summary = "Gives an award to every employee in an organization")
+    public ResponseEntity<String> awardEmployeesInAnOrganization(@PathVariable Long orgId) {
+        LOGGER.info("Awarding every employee in Organization [OrgId: {}]", orgId);
+        employeeService.addAwardsForOrganization(orgId);
+        return ResponseEntity.ok("success");
+    }
 }

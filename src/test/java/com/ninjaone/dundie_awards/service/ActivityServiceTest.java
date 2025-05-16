@@ -25,7 +25,7 @@ class ActivityServiceTest {
 		assertEquals(2, activities.size(), "Expected 2 activities");
 
         for(ActivityDTO activity : activities) {
-            assertNotNull(activity.getOccuredAt());
+            assertNotNull(activity.getOccurredAt());
             assertNotNull(activity.getEvent());
         }
 	}

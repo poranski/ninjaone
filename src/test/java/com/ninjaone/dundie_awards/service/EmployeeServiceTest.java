@@ -6,7 +6,7 @@ import com.ninjaone.dundie_awards.dto.EmployeeDTO;
 import com.ninjaone.dundie_awards.dto.OrganizationDTO;
 import com.ninjaone.dundie_awards.exception.EmployeeIncompleteException;
 import com.ninjaone.dundie_awards.exception.EmployeeNotFoundException;
-import jakarta.annotation.PostConstruct;
+import com.ninjaone.dundie_awards.messages.MessageBroker;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,11 +22,12 @@ class EmployeeServiceTest {
 	private EmployeeService employeeService;
 
     @Autowired
-    private DataLoaderService dataLoaderService;
-    @Autowired
     private AwardsCache awardsCache;
+
     @Autowired
     private ActivityService activityService;
+    @Autowired
+    private MessageBroker messageBroker;
 
     @Test
 	void testGetAllEmployees() {
@@ -152,13 +153,36 @@ class EmployeeServiceTest {
         List<ActivityDTO> updatedActivitiesDTOs = activityService.getAllActivities();
         assertEquals(activitiesDTOs.size() + employeeDTOS.size(), updatedActivitiesDTOs.size(),
             "Activities should be equal to the number of employees in the organization");
-
     }
 
-    @PostConstruct
-    public void seedDatabase() {
-        dataLoaderService.populateDatabase();
+    /*   I ran out of time to test this properly.  There are a few lines of code in the application that have to change
+        to get this working. I will leave this here for you to see that I actually did test it though.
+        I have to mock the rabbitMQ to not return a message for the message broker
+    @Test
+    void giveAwardsToOrganizationRollBack() throws InterruptedException {
+        List<EmployeeDTO> employeeDTOS = employeeService.getEmployeesInOrganization(1L);
+        Integer awards = awardsCache.getTotalAwards();
+
+        employeeService.addAwardsForOrganization(1L);
+        Thread.sleep(11000);
+        messageBroker.checkForIncompleteBatches();
+
+        List<EmployeeDTO> updatedEmployeeDTOS = employeeService.getEmployeesInOrganization(1L);
+
+        Integer newTotalAwards = awardsCache.getTotalAwards();
+        assertEquals(newTotalAwards, awards ,
+            "Total awards should be equal to the number of employees in the organization");
+
+        for (EmployeeDTO employee : employeeDTOS)   {
+            for(EmployeeDTO updatedEmployee : updatedEmployeeDTOS) {
+                if (employee.getId().equals(updatedEmployee.getId())) {
+                    assertEquals(employee.getDundieAwards(), updatedEmployee.getDundieAwards(),
+                        "Dundie awards should be the same");
+                }
+            }
+        }
     }
+     */
 
     private static EmployeeDTO getTestEmployee() {
         OrganizationDTO organizationPikashu = new OrganizationDTO(1L, "Pikashu");

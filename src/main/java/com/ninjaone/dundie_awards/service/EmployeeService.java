@@ -14,7 +14,6 @@ import com.ninjaone.dundie_awards.util.EntityToDTOConvertor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,14 +42,12 @@ public class EmployeeService {
         this.messageBroker = messageBroker;
     }
 
-    @Cacheable("employees")
     public List<EmployeeDTO> getAllEmployees() {
         LOGGER.info("Getting all employees");
         return entityToDTOConvertor.getEmployeeDTOs(employeeRepository.findAll());
 
     }
 
-    @Cacheable(cacheNames = "employee", key= "#id")
     public EmployeeDTO getEmployeeById(Long id) throws EmployeeNotFoundException {
         LOGGER.info("Getting employee [Id: {}]", id);
         Optional<Employee> optionalEmployee = employeeRepository.findById(id);
@@ -63,7 +60,6 @@ public class EmployeeService {
         return entityToDTOConvertor.map(optionalEmployee.get(), EmployeeDTO.class);
     }
 
-    @CacheEvict(value = "employees", allEntries = true)
     public EmployeeDTO createEmployee(EmployeeDTO employeeDTO) throws EmployeeIncompleteException {
         LOGGER.debug("Creating employee. [Employee: {}]", employeeDTO);
 
@@ -75,7 +71,6 @@ public class EmployeeService {
         return entityToDTOConvertor.map(employeeRepository.save(employee), EmployeeDTO.class);
     }
 
-    @CacheEvict(value = "employees", allEntries = true)
     public void deleteEmployee(Long id) throws EmployeeNotFoundException {
         LOGGER.info("Deleting employee [Id: {}]", id);
         Optional<Employee> optionalEmployee = employeeRepository.findById(id);
@@ -110,7 +105,6 @@ public class EmployeeService {
         messageBroker.sendMultipleTransactionalMessages(employees);
     }
 
-    @CacheEvict(value = "employees", allEntries = true)
     public EmployeeDTO updateEmployee(Long id, EmployeeDTO employeeDetails) throws EmployeeNotFoundException,
                     EmployeeIncompleteException {
 
@@ -134,7 +128,6 @@ public class EmployeeService {
         return entityToDTOConvertor.map(employeeRepository.save(employee), EmployeeDTO.class);
     }
 
-    @CacheEvict(value = "employees", allEntries = true)
     public EmployeeDTO giveAward(Long employeeID) throws EmployeeNotFoundException {
         Optional<Employee> optionalEmployee = employeeRepository.findById(employeeID);
 
