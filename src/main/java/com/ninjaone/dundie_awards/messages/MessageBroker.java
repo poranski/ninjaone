@@ -33,7 +33,7 @@ public class MessageBroker {
     private final ConcurrentHashMap<Integer, Integer> incompleteBatches = new ConcurrentHashMap<>();
     private final AtomicInteger batchNumber = new AtomicInteger(0);
 
-    @Value("${messageBroker.wait-time-in-minutes:1}")
+    @Value("${dundie.messageBroker.wait-time-in-minutes:1}")
     private int waitTimeInMinutes;
 
     public MessageBroker(RabbitTemplate rabbitTemplate, ActivityService activityService, EmployeeRepository employeeRepository,
@@ -68,6 +68,7 @@ public class MessageBroker {
 
     public void sendMessage(ActivityDTO activityDTO) {
         LOGGER.info("Sending message to rabbitMQ [Activity: {}]", activityDTO);
+        messagesQueue.add(activityDTO);
         rabbitTemplate.convertAndSend(RabbitMQConfig.QUEUE_NAME, activityDTO);
     }
 
@@ -83,7 +84,7 @@ public class MessageBroker {
 
     //  This will run every minute looking for messages that have not been delivered in the wait time
     //  which messageBroker.wait-time-in-minutes is in the application yaml file defaulting to 1 minute
-    @Scheduled(cron = "0 * * * * *")
+    @Scheduled(cron = "${dundie.scheduling.cron:0 * * * * *}")
     public void checkForIncompleteBatches() {
         incompleteBatches.forEach((currentBatchNumber, employeeCount) -> {
 

@@ -7,7 +7,6 @@ import com.ninjaone.dundie_awards.dto.EmployeeDTO;
 import com.ninjaone.dundie_awards.exception.EmployeeIncompleteException;
 import com.ninjaone.dundie_awards.exception.EmployeeNotFoundException;
 import com.ninjaone.dundie_awards.model.Employee;
-import com.ninjaone.dundie_awards.model.Organization;
 import com.ninjaone.dundie_awards.repository.EmployeeRepository;
 import com.ninjaone.dundie_awards.repository.OrganizationRepository;
 import com.ninjaone.dundie_awards.util.EntityToDTOConvertor;
@@ -49,14 +48,14 @@ public class EmployeeService {
 
     public EmployeeDTO getEmployeeById(Long id) throws EmployeeNotFoundException {
         LOGGER.info("Getting employee [Id: {}]", id);
-        Optional<Employee> optionalEmployee = employeeRepository.findById(id);
 
-        if (optionalEmployee.isEmpty()) {
-            LOGGER.info(REQUESTED_EMPLOYEE_DOES_NOT_EXIST_ID, id);
-            throw new EmployeeNotFoundException(id);
-        }
+        Employee employee = employeeRepository.findById(id)
+            .orElseThrow(() -> {
+                LOGGER.info(REQUESTED_EMPLOYEE_DOES_NOT_EXIST_ID, id);
+                return new EmployeeNotFoundException(id);
+            });
 
-        return entityToDTOConvertor.map(optionalEmployee.get(), EmployeeDTO.class);
+        return entityToDTOConvertor.map(employee, EmployeeDTO.class);
     }
 
     public EmployeeDTO createEmployee(EmployeeDTO employeeDTO) throws EmployeeIncompleteException {
@@ -66,129 +65,115 @@ public class EmployeeService {
             throw new EmployeeIncompleteException(employeeDTO);
         }
 
+        employeeDTO.setDundieAwards(0);
         Employee employee = entityToDTOConvertor.map(employeeDTO, Employee.class);
         return entityToDTOConvertor.map(employeeRepository.save(employee), EmployeeDTO.class);
     }
 
+
     public void deleteEmployee(Long id) throws EmployeeNotFoundException {
         LOGGER.info("Deleting employee [Id: {}]", id);
-        Optional<Employee> optionalEmployee = employeeRepository.findById(id);
 
-        if (optionalEmployee.isEmpty()) {
-            throw new EmployeeNotFoundException(id);
-        }
+        Employee employee = employeeRepository.findById(id)
+            .orElseThrow(() -> new EmployeeNotFoundException(id));
 
-        Employee employee = optionalEmployee.get();
         employeeRepository.delete(employee);
     }
+
 
     public List<EmployeeDTO> getEmployeesInOrganization(Long organizationId) {
         LOGGER.info("Getting employees in organization [Id: {}]", organizationId);
         List<Employee> employees = employeeRepository.findByOrganizationId(organizationId);
-
         return entityToDTOConvertor.getEmployeeDTOs(employees);
     }
 
     @Transactional
-    public void addAwardsForOrganization(Long id) {
-        LOGGER.info("Adding award for everyone in org [Id: {}]", id);
+    public void addAwardsForOrganization(Long organizationId) {
+        LOGGER.info("Adding award for everyone in org [Id: {}]", organizationId);
 
-        List<Employee> employees = employeeRepository.findByOrganizationId(id);
+        List<Employee> employees = employeeRepository.findByOrganizationId(organizationId);
 
-        for (Employee employee : employees) {
-            employee.setDundieAwards(employee.getDundieAwards() + 1);
+        employees.forEach(employee -> {
+            employee.setDundieAwards(
+                Optional.ofNullable(employee.getDundieAwards()).orElse(0) + 1
+            );
             awardsCache.addOneAward();
-            employeeRepository.save(employee);
-        }
+        });
 
+        employeeRepository.saveAll(employees);
         messageBroker.sendMultipleTransactionalMessages(employees);
     }
 
-    public EmployeeDTO updateEmployee(Long id, EmployeeDTO employeeDetails) throws EmployeeNotFoundException,
-                    EmployeeIncompleteException {
+
+    public EmployeeDTO updateEmployee(Long id, EmployeeDTO employeeDetails)
+        throws EmployeeNotFoundException, EmployeeIncompleteException {
 
         LOGGER.info("Updating employee [Employee: {}]", employeeDetails);
 
-        if(!verifyEmployeeIsComplete(employeeDetails)) {
+        if (!verifyEmployeeIsComplete(employeeDetails)) {
             LOGGER.info("Employee data is not complete [Employee: {}]", employeeDetails);
-           throw new EmployeeIncompleteException(employeeDetails);
+            throw new EmployeeIncompleteException(employeeDetails);
         }
 
-        Optional<Employee> optionalEmployee = employeeRepository.findById(id);
-        if (optionalEmployee.isEmpty()) {
-            LOGGER.info(REQUESTED_EMPLOYEE_DOES_NOT_EXIST_ID, id);
-            throw new EmployeeNotFoundException(id);
-        }
+        Employee employee = employeeRepository.findById(id)
+            .orElseThrow(() -> {
+                LOGGER.info(REQUESTED_EMPLOYEE_DOES_NOT_EXIST_ID, id);
+                return new EmployeeNotFoundException(id);
+            });
 
-        Employee employee = optionalEmployee.get();
         employee.setFirstName(employeeDetails.getFirstName());
         employee.setLastName(employeeDetails.getLastName());
 
-        return entityToDTOConvertor.map(employeeRepository.save(employee), EmployeeDTO.class);
+        Employee updatedEmployee = employeeRepository.save(employee);
+        return entityToDTOConvertor.map(updatedEmployee, EmployeeDTO.class);
     }
 
+
     public EmployeeDTO giveAward(Long employeeID) throws EmployeeNotFoundException {
-        Optional<Employee> optionalEmployee = employeeRepository.findById(employeeID);
+        Employee employee = employeeRepository.findById(employeeID)
+            .orElseThrow(() -> {
+                LOGGER.info(REQUESTED_EMPLOYEE_DOES_NOT_EXIST_ID, employeeID);
+                return new EmployeeNotFoundException(employeeID);
+            });
 
-        if(optionalEmployee.isEmpty()) {
-            LOGGER.info(REQUESTED_EMPLOYEE_DOES_NOT_EXIST_ID, employeeID);
-            throw new EmployeeNotFoundException(employeeID);
-        }
-
-        Employee employee = optionalEmployee.get();
-
-        if(employee.getDundieAwards() == null) {
-            employee.setDundieAwards(1);
-        } else {
-            employee.setDundieAwards(employee.getDundieAwards() + 1);
-        }
+        employee.setDundieAwards(
+            Optional.ofNullable(employee.getDundieAwards()).orElse(0) + 1
+        );
 
         employee = employeeRepository.save(employee);
 
-        ActivityDTO activityDTO = new ActivityDTO("Employee got Award!: " + employee.getFirstName() +
-            " " + employee.getLastName(), new Date());
+        ActivityDTO activityDTO = new ActivityDTO(
+            String.format("Employee got Award!: %s %s", employee.getFirstName(), employee.getLastName()),
+            new Date()
+        );
 
         awardsCache.addOneAward();
         messageBroker.sendMessage(activityDTO);
 
-       return entityToDTOConvertor.map(employee, EmployeeDTO.class);
-    }
-
-    public void removeAward(Long employeeID) throws EmployeeNotFoundException {
-        Optional<Employee> optionalEmployee = employeeRepository.findById(employeeID);
-
-        if(optionalEmployee.isEmpty()) {
-            LOGGER.info(REQUESTED_EMPLOYEE_DOES_NOT_EXIST_ID, employeeID);
-            throw new EmployeeNotFoundException(employeeID);
-        }
-
-        Employee employee = optionalEmployee.get();
-
-        if(employee.getDundieAwards() != null) {
-            employee.setDundieAwards(employee.getDundieAwards()-1);
-        }
-
-        employeeRepository.save(employee);
-        awardsCache.removeOneAward();
+        return entityToDTOConvertor.map(employee, EmployeeDTO.class);
     }
 
     private boolean verifyEmployeeIsComplete(EmployeeDTO employee) {
-        if (employee.getOrganization() == null || employee.getOrganization().getId()== null ||
-            employee.getFirstName() == null || employee.getLastName() == null) {
+        if (employee == null ||
+            employee.getFirstName() == null ||
+            employee.getLastName() == null ||
+            employee.getOrganization() == null ||
+            employee.getOrganization().getId() == null) {
 
             LOGGER.info("Employee is not complete. [Employee: {}]", employee);
             return false;
         }
 
         Long orgId = employee.getOrganization().getId();
-        Optional<Organization> optionalOrganization = organizationRepository.findById(orgId);
+        boolean organizationExists = organizationRepository.existsById(orgId);
 
-        if (optionalOrganization.isEmpty()) {
-            LOGGER.info("Organization does not exist `[Id: {}]", orgId);
+        if (!organizationExists) {
+            LOGGER.info("Organization does not exist [Id: {}]", orgId);
             return false;
         }
 
         return true;
     }
+
 }
 

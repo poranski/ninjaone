@@ -30,7 +30,7 @@ public class ActivityService {
 
     public void saveActivity(ActivityDTO activityDTO) {
         LOGGER.info("Saving activity [activity: {}}", activityDTO);
-        Activity activity = entityToDTOConvertor.map(activityDTO, Activity.class);
+        Activity activity = entityToDTOConvertor.getActivity(activityDTO);
         activityRepository.save(activity);
     }
 }

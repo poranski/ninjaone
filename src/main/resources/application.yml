@@ -1,10 +1,14 @@
+dundie:
+  scheduling:
+    cron: "0 * * * * *"
+messageBroker:
+  wait-time-in-minutes: 1
+
 springdoc:
   api-docs:
     path: /openapi
 server:
   port: 3000
-messageBroker:
-  wait-time-in-minutes
 
 spring:
   spring:

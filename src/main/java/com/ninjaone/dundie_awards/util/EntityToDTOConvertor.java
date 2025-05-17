@@ -37,6 +37,7 @@ public class EntityToDTOConvertor {
         modelMapper.typeMap(Activity.class, ActivityDTO.class)
             .addMappings(mapper -> mapper.using(localDateTimeToDateConverter)
                 .map(Activity::getOccurredAt, ActivityDTO::setOccurredAt));
+
     }
 
     public List<EmployeeDTO> getEmployeeDTOs(List<Employee> employees) {
@@ -49,6 +50,15 @@ public class EntityToDTOConvertor {
         List<ActivityDTO> dto = new LinkedList<>();
         activities.forEach(activity -> dto.add(modelMapper.map(activity, ActivityDTO.class)));
         return dto;
+    }
+
+    public Activity getActivity(ActivityDTO activityDTO) {
+
+        LocalDateTime localDateTime = activityDTO.getOccurredAt().toInstant()
+            .atZone(ZoneId.systemDefault())
+            .toLocalDateTime();
+
+        return new Activity(localDateTime, activityDTO.getEvent());
     }
 
     public <S, T> T map(S source, Class<T> targetClass) {
