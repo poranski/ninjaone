@@ -4,9 +4,13 @@ import com.ninjaone.dundie_awards.dto.ActivityDTO;
 import com.ninjaone.dundie_awards.dto.EmployeeDTO;
 import com.ninjaone.dundie_awards.model.Activity;
 import com.ninjaone.dundie_awards.model.Employee;
+import org.modelmapper.Converter;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -17,8 +21,23 @@ public class EntityToDTOConvertor {
 
     public EntityToDTOConvertor(ModelMapper modelMapper) {
         this.modelMapper = modelMapper;
+        configureModelMapper();
     }
 
+    private void configureModelMapper() {
+        Converter<LocalDateTime, Date> localDateTimeToDateConverter = context -> {
+
+            if(context.getSource() == null) {
+                return null;
+            }
+
+            return  Date.from(context.getSource().atZone(ZoneId.systemDefault()).toInstant());
+        };
+
+        modelMapper.typeMap(Activity.class, ActivityDTO.class)
+            .addMappings(mapper -> mapper.using(localDateTimeToDateConverter)
+                .map(Activity::getOccurredAt, ActivityDTO::setOccurredAt));
+    }
 
     public List<EmployeeDTO> getEmployeeDTOs(List<Employee> employees) {
         List<EmployeeDTO> dto = new LinkedList<>();

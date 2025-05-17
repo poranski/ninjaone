@@ -55,7 +55,7 @@ public class RabbitMQConfig {
     @Bean
     public DefaultClassMapper classMapper() {
         DefaultClassMapper classMapper = new DefaultClassMapper();
-        classMapper.setTrustedPackages("com.ninjaone.dundie_awards.model");
+        classMapper.setTrustedPackages("com.ninjaone.dundie_awards.dto");
         return classMapper;
     }
 }

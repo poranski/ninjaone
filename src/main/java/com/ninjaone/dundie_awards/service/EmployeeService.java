@@ -1,11 +1,11 @@
 package com.ninjaone.dundie_awards.service;
 
 import com.ninjaone.dundie_awards.cache.AwardsCache;
+import com.ninjaone.dundie_awards.dto.ActivityDTO;
 import com.ninjaone.dundie_awards.messages.MessageBroker;
 import com.ninjaone.dundie_awards.dto.EmployeeDTO;
 import com.ninjaone.dundie_awards.exception.EmployeeIncompleteException;
 import com.ninjaone.dundie_awards.exception.EmployeeNotFoundException;
-import com.ninjaone.dundie_awards.model.Activity;
 import com.ninjaone.dundie_awards.model.Employee;
 import com.ninjaone.dundie_awards.model.Organization;
 import com.ninjaone.dundie_awards.repository.EmployeeRepository;
@@ -13,7 +13,6 @@ import com.ninjaone.dundie_awards.repository.OrganizationRepository;
 import com.ninjaone.dundie_awards.util.EntityToDTOConvertor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -146,16 +145,15 @@ public class EmployeeService {
 
         employee = employeeRepository.save(employee);
 
-        Activity activity = new Activity(new Date(), "Employee got Award!: " + employee.getFirstName() +
-            " " + employee.getLastName());
+        ActivityDTO activityDTO = new ActivityDTO("Employee got Award!: " + employee.getFirstName() +
+            " " + employee.getLastName(), new Date());
 
         awardsCache.addOneAward();
-        messageBroker.sendMessage(activity);
+        messageBroker.sendMessage(activityDTO);
 
        return entityToDTOConvertor.map(employee, EmployeeDTO.class);
     }
 
-    @CacheEvict(value = "employees", allEntries = true)
     public void removeAward(Long employeeID) throws EmployeeNotFoundException {
         Optional<Employee> optionalEmployee = employeeRepository.findById(employeeID);
 

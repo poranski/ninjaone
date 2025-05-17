@@ -28,11 +28,9 @@ public class ActivityService {
         return entityToDTOConvertor.getActivityDTOs(activities);
     }
 
-    public void saveActivity(Activity activity) {
-        LOGGER.info("Saving activity [activity: {}}", activity);
-        if (activity.getOccurredAt() == null) {
-            activity.setOccurredAt(new java.util.Date());
-        }
+    public void saveActivity(ActivityDTO activityDTO) {
+        LOGGER.info("Saving activity [activity: {}}", activityDTO);
+        Activity activity = entityToDTOConvertor.map(activityDTO, Activity.class);
         activityRepository.save(activity);
     }
 }

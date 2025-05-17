@@ -26,9 +26,6 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // uncomment to reseed data
-        // employeeRepository.deleteAll();
-        // organizationRepository.deleteAll();
 
         if (employeeRepository.count() == 0) {
             Organization organizationPikashu = new Organization("Pikashu");

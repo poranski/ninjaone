@@ -3,6 +3,8 @@ springdoc:
     path: /openapi
 server:
   port: 3000
+messageBroker:
+  wait-time-in-minutes
 
 spring:
   spring:
@@ -27,8 +29,8 @@ spring:
 
     logging:
       level:
-        #org.hibernate.SQL: DEBUG
-        #org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+        org.hibernate.SQL: DEBUG
+        org.hibernate.type.descriptor.sql.BasicBinder: TRACE
         org.hibernate: TRACE
 
 
