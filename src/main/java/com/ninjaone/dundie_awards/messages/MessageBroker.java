@@ -55,7 +55,6 @@ public class MessageBroker {
 
         employees.forEach(employee -> {
             ActivityDTO activity = createActivityDTO(employee, currentBatchNumber);
-            messagesQueue.add(activity);
             sendMessage(activity);
         });
     }
@@ -86,7 +85,8 @@ public class MessageBroker {
     //  which messageBroker.wait-time-in-minutes is in the application yaml file defaulting to 1 minute
     @Scheduled(cron = "${dundie.scheduling.cron:0 * * * * *}")
     public void checkForIncompleteBatches() {
-        incompleteBatches.forEach((currentBatchNumber, employeeCount) -> {
+        LOGGER.info("Checking for incomplete batches");
+        incompleteBatches.forEach((currentBatchNumber, batchCount) -> {
 
             List<ActivityDTO> incompleteActivities = getActivitiesByBatchNumber(currentBatchNumber);
 
@@ -130,7 +130,6 @@ public class MessageBroker {
         }
     }
 
-
     private boolean isOlderThanWaitTime(Date date) {
         long now = System.currentTimeMillis();
         long threshold = now - waitTimeInMinutes * 60 * 1000;
@@ -139,7 +138,7 @@ public class MessageBroker {
 
     private List<ActivityDTO> getActivitiesByBatchNumber(int batchNumber) {
         return messagesQueue.stream()
-            .filter(activity -> activity.getBatchNumber() == batchNumber)
+            .filter(activity -> activity.getBatchNumber() != null && activity.getBatchNumber() == batchNumber)
             .toList();
     }
 
