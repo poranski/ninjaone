@@ -1,3 +1,5 @@
+## I did not get the job.  They hated my code.  This is an example of what not to do.
+
 ## Employee directory organization
 
 This is an application for managing employees of a company. Employees belong to organizations within the company.
